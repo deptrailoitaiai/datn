@@ -1,0 +1,28 @@
+# Node modules
+node_modules/
+
+# Build outputs
+p2p-chat/dist/
+p2p-chat/dist/*.AppImage
+p2p-chat/dist/linux-unpacked/
+
+# Database files
+*.db
+
+# Log files
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test files
+test-*.bin
+test-*.txt
+*-decrypted.*
