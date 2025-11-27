@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P Encrypted Chat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <main>
+            <div class="app-layout">
+                <div class="sidebar">
+                    <div class="sidebar-header">
+                        <h3>P2P Chat</h3>
+                        <div class="user-info">
+                            <span class="current-user" id="currentUser">Not logged in</span>
+                        </div>
+                        <div class="status-controls">
+                            <div class="connection-status">
+                                <span id="connectionStatus">Connecting...</span>
+                                <div class="status-indicator" id="statusIndicator"></div>
+                            </div>
+                            <div class="encryption-toggle">
+                                <label class="switch">
+                                    <input type="checkbox" id="encryptionToggle" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                                <span id="encryptionStatus">Encryption: ON</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="search-section">
+                        <div class="search-container">
+                            <input type="text" id="userSearch" placeholder="Search users..." />
+                            <button id="searchButton">🔍</button>
+                        </div>
+                        <div class="search-results" id="searchResults">
+                            <!-- Search results will appear here -->
+                        </div>
+                    </div>
+                    
+                    <div class="contacts-section">
+                        <h4>Recent Contacts</h4>
+                        <div class="contacts-list" id="contactsList">
+                            <!-- Recent contacts will appear here -->
+                        </div>
+                    </div>
+                    
+                    <div class="room-info">
+                        <div class="info-item">
+                            <strong>Your ID:</strong> <span id="yourId">Connecting...</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Connected Users:</strong> <span id="connectedUsers">0/2</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Secure Channel:</strong> <span id="secureChannel">Not established</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <h3>Chat Messages</h3>
+                        <div class="key-exchange-status" id="keyExchangeStatus">
+                            Waiting for connection...
+                        </div>
+                    </div>
+                
+                <div class="chat-messages-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Messages will appear here -->
+                    </div>
+                    <button class="scroll-to-bottom-btn" id="scrollToBottomBtn" title="Scroll to bottom">
+                        ↓
+                    </button>
+                </div>
+                
+                <div class="chat-input-area">
+                    <div class="message-input-container">
+                        <input type="text" id="messageInput" placeholder="Type your message...">
+                        <button id="sendButton">Send</button>
+                    </div>
+                    
+                    <div class="file-input-container">
+                        <input type="file" id="fileInput" accept=".txt,.pdf,.jpg,.png,.doc,.docx">
+                        <label for="fileInput" class="file-input-label" id="fileInputLabel">
+                            📎 Attach File
+                        </label>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Establishing secure connection...</div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

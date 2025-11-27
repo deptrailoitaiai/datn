@@ -1,0 +1,98 @@
+# Hướng dẫn chi tiết về việc chụp ảnh màn hình minh họa cho Luận văn
+
+Dưới đây là hướng dẫn chi tiết cho từng gợi ý chụp ảnh đã được nêu trong file `luận_văn_outline.txt`.
+
+---
+
+### **Phần 3.2. Các mô đun cài đặt chính**
+
+#### **1. Sơ đồ kiến trúc tổng quan**
+- **Mục đích:** Cung cấp cái nhìn tổng thể về luồng hoạt động của hệ thống.
+- **Cách thực hiện:**
+    - Đây không phải là ảnh chụp màn hình mà là một **sơ đồ bạn cần tự vẽ**.
+    - Sử dụng các công cụ như `draw.io` (diagrams.net), Microsoft Visio, hoặc PowerPoint.
+    - **Nội dung cần có trong sơ đồ:**
+        - **Actors:** "Người dùng A", "Người dùng B".
+        - **Components:** "Client A (Desktop App)", "Client B (Desktop App)", "Backend Server (Node.js)", "Database (SQLite)", "Signaling Server (Socket.IO)".
+        - **Luồng 1: Xác thực (Authentication Flow):**
+            - Vẽ mũi tên từ Client A đến Backend Server với nhãn "1. Gửi yêu cầu đăng nhập (username, password)".
+            - Vẽ mũi tên từ Backend Server đến Database với nhãn "2. Truy vấn, xác thực người dùng".
+            - Vẽ mũi tên từ Backend Server về Client A với nhãn "3. Trả về JWT Token".
+        - **Luồng 2: Chat P2P (P2P Communication Flow):**
+            - Vẽ mũi tên từ Client A đến Signaling Server với nhãn "4. Gửi tín hiệu (offer) cho B".
+            - Vẽ mũi tên từ Signaling Server đến Client B với nhãn "5. Chuyển tiếp tín hiệu".
+            - Vẽ một đường kết nối trực tiếp giữa Client A và Client B với nhãn "**6. Kênh P2P an toàn (Trao đổi khóa và gửi tin nhắn mã hóa)**".
+- **Chú thích cho hình:** "Hình 3.1: Sơ đồ kiến trúc tổng quan của hệ thống chat P2P."
+
+#### **2. Code: Xử lý đăng nhập và tạo JWT**
+- **Mục đích:** Minh họa cách server xác thực người dùng và cấp phát token một cách an toàn.
+- **Vị trí:** File `p2p-chat/server.js`.
+- **Cách chụp:**
+    1.  Mở file `server.js` và tìm đến khối `app.post('/api/auth/login', ...)`.
+    2.  Chụp lại toàn bộ khối chức năng này.
+    3.  Sử dụng một trình chỉnh sửa ảnh để **đánh dấu hoặc khoanh vùng** các dòng code quan trọng:
+        - **Khoanh vùng 1:** Dòng `bcrypt.compareSync(password, user.password)`. Chú thích: "Xác thực mật khẩu người dùng bằng bcrypt".
+        - **Khoanh vùng 2:** Dòng `jwt.sign(...)`. Chú thích: "Tạo JSON Web Token (JWT) sau khi xác thực thành công".
+- **Chú thích cho hình:** "Hình 3.2: Đoạn mã xử lý đăng nhập và tạo JWT phía server."
+
+#### **3. Code: Quy trình trao đổi khóa lai**
+- **Mục đích:** Hiển thị phần code cốt lõi, nơi thực hiện việc trao đổi khóa lai Kyber-X25519.
+- **Vị trí:** File `p2p-chat/public/app.js`.
+- **Cách chụp:**
+    - **Hình 1: Bắt đầu trao đổi khóa (Initiator)**
+        1.  Tìm đến phương thức `startKeyExchange` trong class `P2PChatClient`.
+        2.  Chụp lại toàn bộ phương thức.
+        3.  **Đánh dấu và chú thích:**
+            - **(1)** Khoanh vùng `pqc.kem.generateKeyPair('Kyber512')` và chú thích "Tạo cặp khóa Kyber".
+            - **(2)** Khoanh vùng `window.crypto.subtle.generateKey(...)` cho `X25519` và chú thích "Tạo cặp khóa X25519".
+            - **(3)** Khoanh vùng `this.socket.emit('key_exchange', ...)` và chú thích "Gửi các khóa công khai cho đối tác".
+        - **Chú thích cho hình:** "Hình 3.3: Client khởi tạo và gửi đi các khóa công khai."
+
+    - **Hình 2: Phản hồi và tạo khóa phiên (Responder)**
+        1.  Tìm đến phương thức `handleKeyExchange` trong class `P2PChatClient`.
+        2.  Chụp lại phần `if (data.type === 'offer')`.
+        3.  **Đánh dấu và chú thích:**
+            - **(1)** Khoanh vùng `deriveSharedSecret(this.keyPair.privateKey, data.publicKey)` và chú thích "Tạo khóa chung X25519".
+            - **(2)** Khoanh vùng `pqc.kem.encapsulate(data.kyberPublicKey)` và chú thích "Đóng gói Kyber để tạo khóa chung thứ hai".
+            - **(3)** Khoanh vùng `this.socket.emit('key_exchange', ...)` và chú thích "Gửi lại khóa công khai X25519 và bản mã Kyber".
+        - **Chú thích cho hình:** "Hình 3.4: Client phản hồi, tạo khóa chung và gửi lại thông tin."
+
+---
+
+### **Phần 3.3. Kết quả thực nghiệm**
+
+#### **1. Giao diện ứng dụng**
+- **Mục đích:** Cho thấy sản phẩm cuối cùng có giao diện thân thiện và đầy đủ chức năng.
+- **Cách chụp:**
+    - **Hình Đăng nhập:** Chạy ứng dụng Electron, chụp lại cửa sổ đăng nhập. Có thể chụp thêm một ảnh khi đăng nhập thất bại để thấy thông báo lỗi.
+    - **Hình Giao diện chính:** Đăng nhập thành công, chụp lại toàn bộ cửa sổ ứng dụng. Đảm bảo ảnh chụp thấy rõ: tên người dùng đang đăng nhập, danh sách liên hệ, và cửa sổ chat trống.
+    - **Hình Cuộc hội thoại:** Mở hai cửa sổ ứng dụng, đăng nhập với hai tài khoản khác nhau (ví dụ: `alice` và `emma`). Thực hiện một cuộc trò chuyện ngắn và chụp lại màn hình của một trong hai người dùng, cho thấy tin nhắn đã gửi và nhận.
+
+#### **2. Phân tích luồng trao đổi khóa**
+- **Mục đích:** Cung cấp bằng chứng thực tế rằng việc trao đổi khóa đã diễn ra và thành công.
+- **Cách chụp:**
+    1.  Mở ứng dụng trên trình duyệt (hoặc mở Developer Tools của Electron).
+    2.  Nhấn `F12` để mở Developer Tools, chuyển qua tab **"Network" (Mạng)**.
+    3.  Lọc các kết nối, chỉ chọn "WS" (WebSocket).
+    4.  Thực hiện kết nối chat với một người dùng khác.
+    5.  Bạn sẽ thấy các gói tin được gửi và nhận. Click vào một gói tin `key_exchange`.
+    6.  Chuyển qua tab **"Messages" (Tin nhắn)** của gói tin đó.
+    7.  Chụp lại màn hình này, **khoanh vùng** phần payload (dữ liệu) cho thấy các trường `type: 'offer'`, `publicKey`, `kyberPublicKey`.
+- **Chú thích cho hình:** "Hình 3.5: Gói tin WebSocket chứa khóa công khai được gửi đi trong quá trình trao đổi khóa."
+
+#### **3. Phân tích luồng mã hóa tin nhắn**
+- **Mục đích:** Chứng minh rằng tin nhắn được gửi đi dưới dạng mã hóa, không phải văn bản gốc.
+- **Cách chụp:**
+    1.  Vẫn trong Developer Tools, sau khi đã thiết lập kênh chat, hãy gửi một tin nhắn.
+    2.  Tìm gói tin WebSocket có tên `p2p_message` (hoặc tên tương tự bạn đã đặt).
+    3.  Click vào gói tin và xem phần payload.
+    4.  Chụp lại màn hình, **khoanh vùng** phần dữ liệu của tin nhắn. Nó sẽ là một chuỗi ký tự dài, khó hiểu (dữ liệu đã mã hóa).
+- **Chú thích cho hình:** "Hình 3.6: Dữ liệu tin nhắn được gửi qua kênh P2P dưới dạng bản mã AES-GCM."
+
+#### **4. Đóng gói ứng dụng Desktop**
+- **Mục đích:** Cho thấy sản phẩm đã được đóng gói thành công thành một ứng dụng hoàn chỉnh.
+- **Cách chụp:**
+    1.  Mở trình quản lý file trên máy tính của bạn.
+    2.  Điều hướng đến thư mục `p2p-chat/dist`.
+    3.  Chụp lại cửa sổ thư mục, cho thấy rõ file `P2P Encrypted Chat-1.0.0.AppImage` (cho Linux) hoặc file `.exe` (nếu bạn build cho Windows).
+- **Chú thích cho hình:** "Hình 3.7: File thực thi của ứng dụng sau khi được đóng gói bằng Electron Builder."

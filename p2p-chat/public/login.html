@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P Encrypted Chat - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 500px;
+            min-width: 300px;
+            padding: 40px 30px;
+            text-align: center;
+            margin: auto;
+        }
+
+        .logo {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 1.8em;
+        }
+
+        .form-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .submit-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            margin-top: 15px;
+            padding: 10px;
+            background: #ffebee;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .success-message {
+            color: #27ae60;
+            margin-top: 15px;
+            padding: 10px;
+            background: #e8f5e8;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">🔐</div>
+        <h1>P2P Encrypted Chat</h1>
+        
+        <div class="form-tabs">
+            <button class="tab-button active" onclick="switchTab('login')">Login</button>
+            <button class="tab-button" onclick="switchTab('register')">Register</button>
+        </div>
+
+        <!-- Login Form -->
+        <div id="login-form" class="form-section active">
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" name="password" required>
+                </div>
+                <button type="submit" class="submit-button" id="login-btn">
+                    Login
+                </button>
+            </form>
+        </div>
+
+        <!-- Register Form -->
+        <div id="register-form" class="form-section">
+            <form onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="register-username">Username</label>
+                    <input type="text" id="register-username" name="username" required minlength="3">
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" name="password" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm-password">Confirm Password</label>
+                    <input type="password" id="register-confirm-password" name="confirmPassword" required>
+                </div>
+                <button type="submit" class="submit-button" id="register-btn">
+                    Register
+                </button>
+            </form>
+        </div>
+
+        <div class="error-message" id="error-message"></div>
+        <div class="success-message" id="success-message"></div>
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        let currentTab = 'login';
+
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+
+            // Update form sections
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(`${tab}-form`).classList.add('active');
+
+            currentTab = tab;
+            hideMessages();
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('error-message');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            hideSuccess();
+            hideLoading();
+        }
+
+        function showSuccess(message) {
+            const successEl = document.getElementById('success-message');
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+            hideError();
+            hideLoading();
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            hideMessages();
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function hideError() {
+            document.getElementById('error-message').style.display = 'none';
+        }
+
+        function hideSuccess() {
+            document.getElementById('success-message').style.display = 'none';
+        }
+
+        function hideMessages() {
+            hideError();
+            hideSuccess();
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+
+            if (!username || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            showLoading();
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess('Login successful! Opening chat...');
+                    
+                    // Store user data and token
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    // Notify main process
+                    setTimeout(() => {
+                        ipcRenderer.send('login-success', data);
+                    }, 1000);
+                } else {
+                    showError(data.message || 'Login failed');
+                }
+            } catch (error) {
+                showError('Connection error. Make sure the server is running.');
+                console.error('Login error:', error);
+            }
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm-password').value;
+
+            if (!username || !password || !confirmPassword) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            if (username.length < 3) {
+                showError('Username must be at least 3 characters');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showError('Passwords do not match');
+                return;
+            }
+
+            showLoading();
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess('Registration successful! You can now login.');
+                    setTimeout(() => {
+                        switchTab('login');
+                    }, 1500);
+                } else {
+                    showError(data.message || 'Registration failed');
+                }
+            } catch (error) {
+                showError('Connection error. Make sure the server is running.');
+                console.error('Register error:', error);
+            }
+        }
+
+        // Notify main process that login window is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            ipcRenderer.send('login-window-ready');
+        });
+
+        // Handle Enter key
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                const activeForm = document.querySelector('.form-section.active form');
+                if (activeForm) {
+                    activeForm.dispatchEvent(new Event('submit'));
+                }
+            }
+        });
+    </script>
+</body>
+</html>

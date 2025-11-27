@@ -1,0 +1,28 @@
+Đây là file test cho ứng dụng P2P Chat với mã hóa hybrid.
+
+Nội dung file này sẽ được sử dụng để test chức năng truyền file giữa 2 clients.
+
+Thông tin về hệ thống:
+- Sử dụng Kyber (post-quantum cryptography) kết hợp với X25519 (Elliptic Curve Diffie-Hellman)
+- Dẫn xuất khóa bằng scrypt 
+- Mã hóa tin nhắn và file bằng AES-GCM
+- Hỗ trợ toggle bật/tắt mã hóa trong giao diện
+
+File này có kích thước nhỏ và chứa văn bản UTF-8 để dễ dàng testing.
+
+Khi file này được truyền qua mạng:
+1. Nếu bật mã hóa: File sẽ được mã hóa bằng AES-GCM trước khi gửi
+2. Nếu tắt mã hóa: File sẽ được gửi dưới dạng plaintext
+
+Điều này cho phép monitoring bằng Wireshark để quan sát sự khác biệt giữa 2 chế độ.
+
+Test case scenarios:
+- Gửi file khi encryption ON
+- Gửi file khi encryption OFF  
+- Gửi tin nhắn text khi encryption ON
+- Gửi tin nhắn text khi encryption OFF
+
+Kết quả mong đợi:
+✅ Tin nhắn/file được mã hóa khi bật chế độ encryption
+❌ Tin nhắn/file dạng plaintext khi tắt chế độ encryption
+🔍 Có thể quan sát traffic bằng Wireshark để verify

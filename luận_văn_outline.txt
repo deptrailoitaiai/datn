@@ -1,0 +1,100 @@
+# Đề cương chi tiết cho Luận văn - Chương 3
+
+## 3.2. Các mô đun cài đặt chính
+
+Phần này mô tả kiến trúc và các thành phần công nghệ cốt lõi được sử dụng để xây dựng hệ thống chat P2P mã hóa đầu cuối, tập trung vào cơ chế trao đổi khóa lai Kyber-X25519.
+
+- **Tổng quan kiến trúc hệ thống:**
+    - Mô hình Client-Server cho việc xác thực và quản lý người dùng.
+    - Mô hình P2P (Peer-to-Peer) cho việc trao đổi tin nhắn trực tiếp sau khi đã thiết lập kênh an toàn.
+    - **Kiến trúc ứng dụng Desktop:** Sử dụng Electron.js để đóng gói ứng dụng web (HTML, CSS, JavaScript) thành một ứng dụng desktop đa nền tảng (Windows, Linux).
+        - *Gợi ý hình ảnh:* Sơ đồ kiến trúc tổng quan của hệ thống, chỉ rõ luồng xác thực qua server và luồng chat P2P.
+
+- **Mô đun Backend (Server-side - `server.js`):**
+    - **Nền tảng:** Node.js và framework Express.js.
+    - **Chức năng chính:**
+        - **Xác thực và Quản lý người dùng:** Cung cấp các API endpoints cho việc đăng ký (`/api/auth/register`), đăng nhập (`/api/auth/login`).
+        - **Bảo mật mật khẩu:** Sử dụng `bcrypt` để băm và xác minh mật khẩu, đảm bảo an toàn cho dữ liệu người dùng.
+        - **Cấp phát Token:** Sử dụng JSON Web Tokens (JWT) để quản lý phiên đăng nhập của người dùng.
+        - **Quản lý trạng thái người dùng:** Sử dụng Socket.IO để theo dõi trạng thái online/offline của người dùng và thông báo cho các client khác.
+    - **Cơ sở dữ liệu:** SQLite (`database.db`) để lưu trữ thông tin người dùng (tên đăng nhập, mật khẩu đã băm).
+        - *Gợi ý code:* Chụp đoạn code trong `server.js` xử lý API đăng nhập, trong đó có kiểm tra mật khẩu bằng `bcrypt` và tạo JWT.
+
+- **Mô đun Frontend (Client-side - `public/`):**
+    - **Giao diện người dùng:** Xây dựng bằng HTML, CSS và JavaScript thuần. Giao diện bao gồm các chức năng: đăng nhập, đăng ký, tìm kiếm người dùng, danh sách liên hệ, cửa sổ chat.
+    - **Quản lý trạng thái Client:** Tương tác với server qua API và Socket.IO để cập nhật giao diện.
+    - **Lưu trữ cục bộ:** Sử dụng `localStorage` để lưu danh sách liên hệ gần đây của người dùng.
+
+- **Mô đun Giao tiếp Thời gian thực (Socket.IO):**
+    - **Vai trò:** Là cầu nối trung gian để các client "tìm thấy" nhau (signaling server).
+    - **Luồng hoạt động:**
+        - Client sau khi đăng nhập sẽ kết nối tới Socket.IO server và định danh bằng username của mình.
+        - Khi Client A muốn chat với Client B, A gửi một tín hiệu "offer" đến B thông qua Socket.IO server.
+        - Server chuyển tiếp tín hiệu này đến đúng Client B. Các giao tiếp sau đó (bao gồm cả trao đổi khóa và tin nhắn) có thể diễn ra trực tiếp giữa hai client.
+
+- **Mô đun Mã hóa và Trao đổi khóa (Trọng tâm của đề tài - `public/app.js` và `lib/`):**
+    - **Mục tiêu:** Thiết lập một kênh liên lạc an toàn tuyệt đối giữa hai client (Perfect Forward Secrecy).
+    - **Thư viện sử dụng:** `pqc-kyber` cho Kyber và thư viện tích hợp sẵn của trình duyệt (`SubtleCrypto`) cho X25519 và AES-GCM.
+    - **Quy trình trao đổi khóa lai (Hybrid Key Exchange):**
+        1.  **Khởi tạo (Initiator - Client A):**
+            - Client A tạo một cặp khóa X25519 (khóa tạm thời cho phiên chat).
+            - Client A tạo một cặp khóa Kyber.
+            - Client A gửi **khóa công khai X25519** và **khóa công khai Kyber** của mình cho Client B (thông qua Socket.IO).
+        2.  **Phản hồi (Responder - Client B):**
+            - Client B nhận được hai khóa công khai từ A.
+            - Client B tạo cặp khóa X25519 của riêng mình.
+            - **Tạo khóa chung X25519:** Client B sử dụng khóa riêng X25519 của mình và khóa công khai X25519 của A để tạo ra một khóa chung (shared secret 1).
+            - **Đóng gói Kyber:** Client B sử dụng khóa công khai Kyber của A để tạo ra một bản mã (ciphertext) và một khóa chung thứ hai (shared secret 2).
+            - Client B gửi **khóa công khai X25519** của mình và **bản mã Kyber** lại cho Client A.
+        3.  **Hoàn tất (Initiator - Client A):**
+            - Client A nhận được khóa công khai X25519 và bản mã Kyber từ B.
+            - **Tạo khóa chung X25519:** Client A sử dụng khóa riêng X25519 của mình và khóa công khai X25519 của B để tạo ra cùng một `shared secret 1`.
+            - **Mở gói Kyber:** Client A sử dụng khóa riêng Kyber của mình để giải mã bản mã nhận được từ B, thu được `shared secret 2`.
+        4.  **Tạo khóa phiên (Session Key):** Cả hai client kết hợp `shared secret 1` và `shared secret 2` (ví dụ: bằng cách băm chúng lại với nhau) để tạo ra một khóa phiên AES-256 duy nhất cho phiên trò chuyện.
+    - **Mã hóa tin nhắn:**
+        - Tất cả các tin nhắn sau đó được mã hóa bằng thuật toán **AES-256-GCM** với khóa phiên vừa tạo.
+        - AES-GCM được chọn vì nó cung cấp cả tính bí mật (confidentiality) và tính toàn vẹn (integrity) cho dữ liệu.
+        - *Gợi ý code:* Chụp các đoạn code quan trọng trong `P2PChatClient.js` hoặc file tương đương thể hiện các bước: `startKeyExchange`, `handleKeyExchange`, và hàm mã hóa/giải mã tin nhắn bằng AES-GCM.
+
+---
+
+## 3.3. Kết quả thực nghiệm
+
+Phần này trình bày các kết quả đạt được từ việc cài đặt và thử nghiệm hệ thống, chứng minh tính đúng đắn của giải pháp và hiệu quả của cơ chế trao đổi khóa.
+
+- **Giao diện và Chức năng ứng dụng:**
+    - **Xác thực:** Hệ thống cho phép người dùng đăng ký và đăng nhập thành công. Giao diện hiển thị lỗi khi nhập sai thông tin.
+        - *Gợi ý hình ảnh:* Chụp màn hình cửa sổ đăng nhập của ứng dụng Electron.
+    - **Giao diện chính:** Sau khi đăng nhập, giao diện hiển thị tên người dùng, danh sách liên hệ, khu vực tìm kiếm và cửa sổ chat.
+        - *Gợi ý hình ảnh:* Chụp màn hình giao diện chính sau khi đăng nhập, có thể hiển thị một vài liên hệ trong danh sách.
+    - **Chat thời gian thực:** Tin nhắn được gửi và nhận gần như ngay lập tức giữa hai client.
+        - *Gợi ý hình ảnh:* Chụp màn hình một cuộc hội thoại đang diễn ra giữa hai người dùng (ví dụ: `alice` và `emma`).
+
+- **Phân tích luồng trao đổi khóa:**
+    - **Chứng minh quá trình trao đổi khóa thành công:**
+        - Bằng cách sử dụng công cụ gỡ lỗi của trình duyệt (Developer Tools), ta có thể theo dõi các thông điệp được gửi qua Socket.IO trong quá trình thiết lập kết nối.
+        - Các thông điệp này chứa các khóa công khai (X25519, Kyber) và bản mã Kyber.
+        - Khóa phiên cuối cùng được tạo ra ở cả hai client là giống hệt nhau, chứng tỏ quá trình trao đổi khóa lai đã thành công.
+        - *Gợi ý hình ảnh:* Chụp màn hình tab "Network" hoặc "Console" trong Developer Tools, làm nổi bật các gói tin Socket.IO chứa dữ liệu trao đổi khóa. Có thể log khóa phiên (đã được cắt ngắn) ra console ở cả hai client để chứng minh chúng khớp nhau.
+
+- **Phân tích luồng mã hóa tin nhắn:**
+    - **Chứng minh tính bí mật:**
+        - Tin nhắn được gửi đi dưới dạng bản mã (ciphertext). Khi chặn bắt gói tin, nội dung tin nhắn không thể đọc được.
+        - *Gợi ý hình ảnh:* Chụp màn hình dữ liệu tin nhắn được gửi đi trong Developer Tools, cho thấy nội dung là một chuỗi mã hóa, không phải văn bản gốc.
+    - **Chứng minh tính toàn vẹn:**
+        - Nếu một kẻ tấn công thay đổi nội dung bản mã trên đường truyền, phía người nhận sẽ không thể giải mã thành công do tag xác thực của AES-GCM không khớp.
+        - Thử nghiệm có thể được thực hiện bằng cách giả lập thay đổi một vài byte của gói tin trước khi nó đến tay người nhận. Kết quả là quá trình giải mã sẽ thất bại.
+
+- **Đánh giá hiệu năng và bảo mật:**
+    - **Hiệu năng:**
+        - Quá trình trao đổi khóa diễn ra nhanh chóng (thường dưới 1 giây), không gây ảnh hưởng đáng kể đến trải nghiệm người dùng.
+        - Việc mã hóa/giải mã tin nhắn bằng AES-GCM có hiệu năng rất cao và không gây độ trễ cảm nhận được.
+    - **Bảo mật:**
+        - **Chống lại tấn công thụ động (Eavesdropping):** Kẻ tấn công không thể đọc được nội dung vì không có khóa phiên.
+        - **Chống lại tấn công Man-in-the-Middle (MITM) trên đường truyền khóa:** Nhờ Kyber, kẻ tấn công không thể suy ra khóa chung ngay cả khi có được toàn bộ dữ liệu trao đổi (giả định khả năng tính toán lượng tử trong tương lai). X25519 cung cấp lớp bảo vệ kinh điển.
+        - **Tính bảo mật chuyển tiếp hoàn hảo (Perfect Forward Secrecy):** Khóa phiên được tạo ra là tạm thời. Nếu một khóa dài hạn (ví dụ: khóa đăng nhập) bị lộ, các tin nhắn trong quá khứ vẫn an toàn vì chúng được mã hóa bằng các khóa phiên khác nhau và đã bị hủy.
+
+- **Đóng gói ứng dụng Desktop:**
+    - Hệ thống đã được đóng gói thành công thành file `.AppImage` cho Linux và `.exe` cho Windows bằng Electron Builder.
+    - Ứng dụng hoạt động độc lập, tự khởi chạy server nền và kết nối, mang lại trải nghiệm người dùng hoàn chỉnh.
+    - *Gợi ý hình ảnh:* Chụp ảnh file `.AppImage` hoặc `.exe` đã được tạo ra trong thư mục `dist`.

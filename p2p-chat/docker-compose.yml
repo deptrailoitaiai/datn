@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  p2p-chat-server:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./test-files:/usr/src/app/test-files
+    networks:
+      - p2p-network
+
+  # Client 1 - runs on port 3001
+  p2p-client-1:
+    build: .
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - CLIENT_ID=client1
+    depends_on:
+      - p2p-chat-server
+    networks:
+      - p2p-network
+
+  # Client 2 - runs on port 3002  
+  p2p-client-2:
+    build: .
+    ports:
+      - "3002:3000"
+    environment:
+      - NODE_ENV=production
+      - CLIENT_ID=client2
+    depends_on:
+      - p2p-chat-server
+    networks:
+      - p2p-network
+
+networks:
+  p2p-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

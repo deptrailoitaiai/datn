@@ -1,0 +1,11 @@
+Hello P2P Chat! 🚀
+
+This is a test file for encrypted file transfer.
+Testing Vietnamese: Xin chào thế giới!
+Special chars: @#$%^&*()_+-=[]{}|;:,.<>?
+
+Line 1: Basic text
+Line 2: Numbers 123456789
+Line 3: Symbols !@#$%^&*()
+
+End of test file.
